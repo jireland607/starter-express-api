@@ -1,26 +1,46 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const pdf = require('html-pdf');
-
 const app = express();
-app.use(bodyParser.text());
+const service = require('./service')
+app.use(express.json());
 
-app.put('/api/convert-to-pdf', (req, res) => {
-  const html = req.body;
+app.get("/test", service.hello_world);
+app.post("/pdf", service.generate_pdf);
+
+app.listen(3000, ()=> {
+    console.log(`project running on port 3000`);
+});
+
+
+
+
+const puppeteer = require('puppeteer');
+const fs = require('fs');
+
+
+
+(async () => {
+
+    // Create a browser instance
+    const browser = await puppeteer.launch();
   
-  // Convert HTML to PDF
-  pdf.create(html).toBuffer((err, buffer) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send('Error converting HTML to PDF');
-    } else {
-      // Convert PDF buffer to base64
-      const base64 = buffer.toString('base64');
-      res.send(base64);
-    }
-  });
-});
+    // Create a new page
+    const page = await browser.newPage();
+  
+    //Get HTML content from HTML file
 
-app.listen(3000, () => {
-  console.log('Server started on port 3000');
-});
+  
+  
+    // To reflect CSS used for screens instead of print
+    await page.emulateMediaType('screen');
+  
+    // Downlaod the PDF
+    const pdf = await page.pdf({
+      path: 'result.pdf',
+      margin: { top: '100px', right: '50px', bottom: '100px', left: '50px' },
+      printBackground: true,
+      format: 'A4',
+    });
+  
+    // Close the browser instance
+    await browser.close();
+  })();
